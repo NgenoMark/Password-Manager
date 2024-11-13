@@ -20,18 +20,10 @@ class Keychain {
    *  You may design the constructor with any parameters you would like. 
    * Return Type: void
    */
-  constructor() {
-    this.data = { 
-      /* Store member variables that you intend to be public here
-         (i.e. information that will not compromise security if an adversary sees) */
-    };
-    this.secrets = {
-      /* Store member variables that you intend to be private here
-         (information that an adversary should NOT see). */
-    };
-
-    throw "Not Implemented!";
-  };
+  constructor(masterKey, kvs = {}, salt) {
+    this.data = { kvs }; // key-value store that’s public
+    this.secrets = { masterKey, salt }; // master key and salt kept secret
+  }
 
   /** 
     * Creates an empty keychain with the given password.
@@ -41,7 +33,9 @@ class Keychain {
     * Return Type: void
     */
   static async init(password) {
-    throw "Not Implemented!";
+    const salt = getRandomBytes(16); // generate a new salt
+    const masterKey = await deriveKey(password, salt); // derive master key from password
+    return new Keychain(masterKey, {}, salt); // initialize with empty KVS
   }
 
   /**
@@ -62,9 +56,18 @@ class Keychain {
     * Return Type: Keychain
     */
   static async load(password, repr, trustedDataCheck) {
-    throw "Not Implemented!";
-  };
+    const parsed = JSON.parse(repr);
+    const { kvs, salt } = parsed;
+    const masterKey = await deriveKey(password, decodeBuffer(salt)); // derive master key from password and stored salt
 
+    // Compute checksum and verify integrity if trustedDataCheck is provided
+    const calculatedChecksum = await sha256(JSON.stringify(parsed));
+    if (trustedDataCheck && calculatedChecksum !== trustedDataCheck) {
+      throw new Error("Integrity check failed.");
+    }
+
+    return new Keychain(masterKey, kvs, decodeBuffer(salt));
+  };
   /**
     * Returns a JSON serialization of the contents of the keychain that can be 
     * loaded back using the load function. The return value should consist of
