@@ -119,9 +119,19 @@ class Keychain {
   *   value: string
   * Return Type: void
   */
+  
+  /* Set name */
   async set(name, value) {
-    throw "Not Implemented!";
-  };
+    const iv = getRandomBytes(12); // AES-GCM IV
+    const encryptedValue = await encryptAES(this.secrets.masterKey, stringToBuffer(value), iv);
+
+    // Store encrypted value and IV as buffers
+    this.data.kvs[name] = {
+      value: encodeBuffer(encryptedValue),
+      iv: encodeBuffer(iv),
+    };
+  }
+  
 
   /**
     * Removes the record with name from the password manager. Returns true
@@ -131,9 +141,16 @@ class Keychain {
     *   name: string
     * Return Type: Promise<boolean>
   */
+
+  /* Remove name */
   async remove(name) {
-    throw "Not Implemented!";
-  };
+    if (this.data.kvs[name]) {
+      delete this.data.kvs[name];
+      return true;
+    }
+    return false;
+  }
+
 };
 
 module.exports = { Keychain }
