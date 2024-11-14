@@ -81,8 +81,15 @@ class Keychain {
     * Return Type: array
     */ 
   async dump() {
-    throw "Not Implemented!";
-  };
+    const jsonData = JSON.stringify({
+      kvs: this.data.kvs,
+      salt: encodeBuffer(this.secrets.salt)
+    }); // serialize KVS and salt
+    const checksum = await sha256(jsonData); // calculate SHA-256 checksum
+    return [jsonData, checksum];
+  }
+  
+
 
   /**
     * Fetches the data (as a string) corresponding to the given domain from the KVS.
@@ -94,8 +101,13 @@ class Keychain {
     * Return Type: Promise<string>
     */
   async get(name) {
-    throw "Not Implemented!";
-  };
+    if (!this.data.kvs[name]) return null;
+
+    const { iv, value } = this.data.kvs[name];
+    const decryptedValue = await decryptAES(this.secrets.masterKey, decodeBuffer(value), decodeBuffer(iv));
+    return bufferToString(decryptedValue);
+  }
+  
 
   /** 
   * Inserts the domain and associated data into the KVS. If the domain is
@@ -125,3 +137,5 @@ class Keychain {
 };
 
 module.exports = { Keychain }
+
+
