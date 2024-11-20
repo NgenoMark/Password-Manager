@@ -9,8 +9,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "crypto-browserify": "^3.12.1",
     "expect.js": "^0.3.1",
     "mocha": "^9.1.4",
     "package.json": "^2.0.1"
+  },
+  "devDependencies": {
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4"
   }
 }

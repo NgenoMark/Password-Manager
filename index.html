@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Password Manager</h1>
+
+        <!-- Form for Creating or Loading Keychain -->
+        <form id="keychainForm" onsubmit="return false;">
+            <h2>Create or Load Keychain</h2>
+            <input type="password" id="password" placeholder="Enter password" />
+            <button type="button" id="initKeychain">Create Keychain</button>
+            <button id="saveKeychain">Save Keychain</button>
+            <button type="button" id="loadKeychain">Load Keychain</button>
+        </form>
+
+        <!-- Form for Managing Entries -->
+        <form id="entryForm" onsubmit="return false;">
+            <h2>Manage Entries</h2>
+            <input type="text" id="domain" placeholder="Enter domain (e.g., example.com)" />
+            <input type="password" id="domainPassword" placeholder="Enter password" />
+            <button type="button" id="setPassword">Set Password</button>
+            <button type="button" id="getPassword">Get Password</button>
+            <button type="button" id="removePassword">Remove Password</button>
+        </form>
+
+        <!-- Log Section -->
+        <div class="log" id="log"></div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
