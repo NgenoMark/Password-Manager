@@ -58,16 +58,31 @@ class Keychain {
   static async load(password, repr, trustedDataCheck) {
     const parsed = JSON.parse(repr);
     const { kvs, salt } = parsed;
-    const masterKey = await deriveKey(password, decodeBuffer(salt)); // derive master key from password and stored salt
-
+  
+    const masterKey = await deriveKey(password, decodeBuffer(salt));
+  
+    // Optional: Try decrypting a test value to ensure the password is correct
+    try {
+      // Attempt to decrypt an existing value to verify the password
+      const testKey = Object.keys(kvs)[0];
+      if (testKey) {
+        const { value, iv } = kvs[testKey];
+        await decryptAES(masterKey, decodeBuffer(value), decodeBuffer(iv));
+      }
+    } catch {
+      throw new Error("Incorrect password."); // Throw an error for incorrect password
+    }
+  
     // Compute checksum and verify integrity if trustedDataCheck is provided
     const calculatedChecksum = await sha256(JSON.stringify(parsed));
     if (trustedDataCheck && calculatedChecksum !== trustedDataCheck) {
       throw new Error("Integrity check failed.");
     }
-
+  
     return new Keychain(masterKey, kvs, decodeBuffer(salt));
-  };
+  }
+  
+  
   /**
     * Returns a JSON serialization of the contents of the keychain that can be 
     * loaded back using the load function. The return value should consist of
@@ -84,10 +99,11 @@ class Keychain {
     const jsonData = JSON.stringify({
       kvs: this.data.kvs,
       salt: encodeBuffer(this.secrets.salt)
-    }); // serialize KVS and salt
-    const checksum = await sha256(jsonData); // calculate SHA-256 checksum
+    });
+    const checksum = await sha256(jsonData);
     return [jsonData, checksum];
   }
+  
   
 
 
@@ -101,14 +117,21 @@ class Keychain {
     * Return Type: Promise<string>
     */
   async get(name) {
-    if (!this.data.kvs[name]) return null;
-
-    const { iv, value } = this.data.kvs[name];
+    const hashedName = await sha256(name); // Generate hashed key
+    if (!this.data.kvs[hashedName]) return null;
+  
+    const { iv, value } = this.data.kvs[hashedName];
     const decryptedValue = await decryptAES(this.secrets.masterKey, decodeBuffer(value), decodeBuffer(iv));
-    return bufferToString(decryptedValue);
-  }
-  
-
+    const [decryptedName, decryptedPassword] = bufferToString(decryptedValue).split(':');
+  
+    if (decryptedName !== name) {
+      throw new Error("Decrypted domain name does not match."); // Extra security check
+    }
+  
+    return decryptedPassword;
+  }
+  
+  
   /** 
   * Inserts the domain and associated data into the KVS. If the domain is
   * already in the password manager, this method should update its value. If
@@ -123,14 +146,20 @@ class Keychain {
   /* Set name */
   async set(name, value) {
     const iv = getRandomBytes(12); // AES-GCM IV
-    const encryptedValue = await encryptAES(this.secrets.masterKey, stringToBuffer(value), iv);
-
-    // Store encrypted value and IV as buffers
-    this.data.kvs[name] = {
+    const combinedValue = `${name}:${value}`; // Combine domain and password
+    const encryptedValue = await encryptAES(this.secrets.masterKey, stringToBuffer(combinedValue), iv);
+  
+    // Generate a hashed version of the domain name as a key
+    const hashedName = await sha256(name);
+  
+    // Store encrypted value and IV under the hashed key
+    this.data.kvs[hashedName] = {
       value: encodeBuffer(encryptedValue),
       iv: encodeBuffer(iv),
     };
   }
+  
+  
   
 
   /**
@@ -144,12 +173,14 @@ class Keychain {
 
   /* Remove name */
   async remove(name) {
-    if (this.data.kvs[name]) {
-      delete this.data.kvs[name];
+    const hashedName = await sha256(name); // Generate hashed key
+    if (this.data.kvs[hashedName]) {
+      delete this.data.kvs[hashedName]; // Remove the entry
       return true;
     }
     return false;
   }
+  
 };
 
 /********* Helper Functions ********/
@@ -183,5 +214,3 @@ async function sha256(data) {
 }
 
 module.exports = { Keychain }
-
-
