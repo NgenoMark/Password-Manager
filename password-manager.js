@@ -150,8 +150,37 @@ class Keychain {
     }
     return false;
   }
-
 };
+
+/********* Helper Functions ********/
+
+// Derives an AES-GCM key from the provided password
+async function deriveKey(password, salt) {
+  const keyMaterial = await subtle.importKey("raw", stringToBuffer(password), "PBKDF2", false, ["deriveKey"]);
+  return await subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations: PBKDF2_ITERATIONS, hash: "SHA-256" },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    true,
+    ["encrypt", "decrypt"]
+  );
+}
+
+// Encrypts data using AES-GCM with the given key and IV
+async function encryptAES(key, data, iv) {
+  return await subtle.encrypt({ name: "AES-GCM", iv }, key, data);
+}
+
+// Decrypts data using AES-GCM with the given key and IV
+async function decryptAES(key, encryptedData, iv) {
+  return await subtle.decrypt({ name: "AES-GCM", iv }, key, encryptedData);
+}
+
+// Computes SHA-256 hash of the input data
+async function sha256(data) {
+  const hashBuffer = await subtle.digest("SHA-256", stringToBuffer(data));
+  return bufferToString(hashBuffer);
+}
 
 module.exports = { Keychain }
 
