@@ -15,7 +15,7 @@
             <h2>Create or Load Keychain</h2>
             <input type="password" id="password" placeholder="Enter password" />
             <button type="button" id="initKeychain">Create Keychain</button>
-            <button id="saveKeychain">Save Keychain</button>
+            <button type="button" id="saveKeychain">Save Keychain</button>
             <button type="button" id="loadKeychain">Load Keychain</button>
         </form>
 
@@ -25,7 +25,8 @@
             <input type="text" id="domain" placeholder="Enter domain (e.g., example.com)" />
             <input type="password" id="domainPassword" placeholder="Enter password" />
             <button type="button" id="setPassword">Set Password</button>
-            <button type="button" id="getPassword">Get Password</button>
+            <button type="button" id="getEncryptedPassword">Get Encrypted Password</button>
+            <button type="button" id="getDecryptedPassword">Get Decrypted Password</button>
             <button type="button" id="removePassword">Remove Password</button>
         </form>
 
@@ -33,6 +34,7 @@
         <div class="log" id="log"></div>
     </div>
 
+    <!-- Import Main Script -->
     <script type="module" src="script.js"></script>
 </body>
 </html>

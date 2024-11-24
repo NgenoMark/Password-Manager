@@ -107,7 +107,7 @@ async function decryptAES(key, data, iv) {
     return crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
 }
 
-async function sha256(data) {
+export async function sha256(data) {
     const hashBuffer = await crypto.subtle.digest("SHA-256", stringToBuffer(data));
     return encodeBuffer(hashBuffer);
 }
