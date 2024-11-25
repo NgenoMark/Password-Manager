@@ -1,32 +1,36 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors');
-
 const app = express();
+const port = 3000;
+
 app.use(bodyParser.json());
-app.use(cors());
 
-// In-memory database for simplicity
-let keychainDatabase = {};
+let keychainData = {};
 
-// Route to save keychain data
+// Endpoint to save keychain data
 app.post('/saveKeychain', (req, res) => {
-    const { userId, keychainData } = req.body;
-    keychainDatabase[userId] = keychainData;
-    res.status(200).send('Keychain data saved successfully');
+    const { userId, keychainData: data } = req.body;
+    keychainData[userId] = data;
+    res.sendStatus(200);
 });
 
-// Route to load keychain data
+// Endpoint to load keychain data
 app.post('/loadKeychain', (req, res) => {
     const { userId } = req.body;
-    const keychainData = keychainDatabase[userId];
-    if (keychainData) {
-        res.status(200).json(keychainData);
+    if (keychainData[userId]) {
+        res.json(keychainData[userId]);
     } else {
-        res.status(404).send('No keychain data found for this user');
+        res.sendStatus(404);
     }
 });
 
-app.listen(3000, () => {
-    console.log('Server is running on port 3000');
+// Endpoint to log messages from the client
+app.post('/logMessage', (req, res) => {
+    const { message } = req.body;
+    console.log(message);
+    res.sendStatus(200);
+});
+
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
 });

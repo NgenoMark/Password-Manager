@@ -1,7 +1,7 @@
 import { Keychain, sha256 } from "./password-manager.js";
 
 let keychain = null;
-const userId = "user123"; // Replace with actual user ID
+const userId = "user123"; 
 
 // Helper function to log messages
 function log(message) {
@@ -109,6 +109,13 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             await keychain.set(domain, password);
             log(`Password for ${domain} saved successfully.`);
+            
+            // Log encrypted domain and password to console
+            const hashedName = await sha256(domain);
+            const entry = keychain.data.kvs[hashedName];
+            if (entry) {
+                console.log(`Domain hash: ${hashedName}, Encrypted password: ${entry.value}`);
+            }
         } catch (error) {
             log(`Error saving password: ${error.message}`);
         }
@@ -128,6 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const hashedName = await sha256(domain);
         const entry = keychain.data.kvs[hashedName];
         if (entry) {
+            console.log(`Encrypted value for ${domain}: ${entry.value}`);
             log(`Encrypted value for ${domain}: ${entry.value}`);
         } else {
             log(`No encrypted value found for ${domain}.`);
